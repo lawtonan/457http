@@ -1,0 +1,22 @@
+Http/1.1 501 "Message"
+date:
+
+
+Http/1.1 200 OK \r\n
+date:       \r\n
+last-modified:      \r\n    (fstat)
+content-type: ~~~ types for html, plain text, jpeg images, and pdf files
+length: ~~~
+\r\n
+[send]
+file contents
+[send]
+
+http/1.1 404 Not Found
+date:       \r\n
+content-type: ~~~ types for html, plain text, jpeg images, and pdf files
+length: ~~~
+\r\n
+Note that a 404 response has a body: you must include the error page to be displayed on the client.
+
+Getopts for command line arguments
