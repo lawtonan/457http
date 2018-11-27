@@ -20,12 +20,22 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <cstring>
 
 void* handleclient(void* arg) {
 	int clientsocket = *(int*)arg;
 	char line[5000];
+	
 	int rsize;
-	char *command;
+	int counter;
+	const char *head;
+    const char *tail;
+
+	std::string parse;
+	std::string type;
+	std::string file;
+	std::string connection;
+
 	while(1){
 		rsize = recv(clientsocket, line, 5000, 0);
 		if(rsize == 0){
@@ -35,13 +45,39 @@ void* handleclient(void* arg) {
 			return 0;
 		}
 
-		command = strtok(line," ");
-		if(strcmp(command, "GET") != 0){
-			std::cout << "ERROR 501" << std::endl;
-		}
-		std::cout << "recieved: " << line << std::endl;
+		head = line;
+		tail = line;
 		
+		counter = 0;
+		while(*tail != '\0'){
+			while (*tail != '\0' && *tail != ' '){
+				parse = std::string(head, tail+1);
+				++tail;
+			}
+			if(counter==0){
+				type = parse;
+				if(strcmp(type.c_str(),"GET")!=0){
+					std::cout << "ERROR 501" << std::endl;
+				}
+				counter++;	
+				std::cout<<"TYPE: " << type <<std::endl;
+			}else if(counter==1){
+				file = parse;
+				counter++;		
+				std::cout<<"FILE: " << file <<std::endl;	
+			}else if(counter==15){
+				connection = parse;
+				counter++;
+				std::cout<<"CONNECTION: " << connection <<std::endl;
+			}else{
+				counter++;
+			}
 			
+			//std::cout<<parse<<std::endl;
+			tail++;		
+			head=tail;
+		}
+		
 
 	}
 	return 0;
