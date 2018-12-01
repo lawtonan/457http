@@ -151,7 +151,30 @@ void* handleclient(void* arg) {
 
 		char* lmodtime = std::ctime(&mod_time);
 		std::cout<<"MODTIME: " << lmodtime << std::endl;
-	
+		
+		sendb = "";
+		strcpy(message, "OK");
+
+		std::fseek(myfile, 0, SEEK_END);
+		std::size_t filesize = std::ftell(myfile);
+		rewind(myfile);
+
+		char body[filesize];
+
+		size_t read = fread(body, 1, filesize, myfile);
+
+		sendb = version + " 200 " + message + "\n"
+			+ "Date: " + date + "\n"
+			+ "Last-Modified: " + lmodtime + "\n"
+			+ "Content-Type: " + type + "\n"
+			+ "Content-Length: " filesize + "\n\n"
+			+ body;
+
+		send(clientsocket, sendb.c_str(), sendb.length(), 0);
+
+		std::cout << "File Sent" << std::endl;
+
+
 		// SEND CODE 200 With FIle Contents
 		// WRITE TO TXT FILE / STDOUT
 		// 304 ERROR CODE
