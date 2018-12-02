@@ -42,7 +42,7 @@ void* handleclient(void* arg) {
 	int rsize;
 	int counter;
 	const char *head;
-    const char *tail;
+    	const char *tail;
 
 	std::string ext;
 
@@ -66,9 +66,12 @@ void* handleclient(void* arg) {
 
 	while(1){
 		e501 = false;
+		//usleep(500);
 		rsize = recv(clientsocket, line, 5000, 0);
+		std::cout << "------------------\n" << std::endl;
+
 		if(rsize == 0){
-            pthread_exit(0);
+            		pthread_exit(0);
 			return 0;
 		}
 
@@ -110,10 +113,21 @@ void* handleclient(void* arg) {
 			tail++;		
 			head=tail;
 		}
+		connection = "keep-alive";
 		
 		ext = file.substr(file.find("."),file.size());
 		std::cout<<"FILE EXT: " << ext <<std::endl;
-		if(ext != ".html" && ext != ".txt" && ext != ".jpg" && ext != ".pdf"){
+		if(ext == ".html"){
+			ext = "text/html; charset=utf-8";
+		}else if(ext == ".txt"){
+			ext = "text/plain; charset=utf-8";
+		}else if(ext == ".jpg"){
+			ext = "image/jpeg";
+		}else if(ext == ".pdf"){
+			ext = "application/pdf";
+		}else if(ext == "ico"){
+			continue;
+		}else{
 			std::cout << "ERROR 501" << std::endl;
 			e501 = true;
 		}
@@ -129,23 +143,28 @@ void* handleclient(void* arg) {
 			
 			sendb = version + " 501 Not Implemented\nDate: " + date + "\nContent-Type: text/html; charset=utf-8\nContent-Length: 18\n\n" + message;  
 			send(clientsocket,sendb.c_str(), sendb.length(), 0);
-			pthread_exit(0);
+			break;
 		}
 
 		char fname[50];
 		strcpy(fname,file.c_str());
 		std::FILE* myfile; 
-		if((myfile = std::fopen(strcat(dir,fname),"r")) == NULL){
+		char fpath[20] = "";
+		strcpy(fpath,dir);
+		
+		if((myfile = std::fopen(strcat(fpath,fname),"r")) == NULL){
 			sendb = "";
 			strcpy(message,"<h1>404 Error</h1>");
 			
 			sendb = version + " 404 Not Found\nDate: " + date + "\nContent-Type: text/html; charset=utf-8\nContent-Length: 18\n\n" + message;  
 			send(clientsocket,sendb.c_str(), sendb.length(), 0);
-			pthread_exit(0);
+			break;
 		}
 		
+		std::cout << "\nFULLPATH: " << fpath << std::endl;
+
 		time_t mod_time;
-		if(stat(dir, &result)==0){
+		if(stat(fpath, &result)==0){
 			mod_time = result.st_mtime;
 		}
 
@@ -156,30 +175,42 @@ void* handleclient(void* arg) {
 		strcpy(message, "OK");
 
 		std::fseek(myfile, 0, SEEK_END);
-		std::size_t filesize = std::ftell(myfile);
+		long filesize = std::ftell(myfile);
 		rewind(myfile);
 
-		char body[filesize];
+		char *body = (char *)malloc(filesize);
 
 		size_t read = fread(body, 1, filesize, myfile);
 
+		char str[256];
+		//usleep(250);
+		snprintf(str, sizeof str, "%zu", filesize);
+
 		sendb = version + " 200 " + message + "\n"
+			+ "Connection: " + connection + "\n"
+			+ "Content-Type: " + ext + "\n" 
+			+ "Content-Length: " + str  + "\n"
 			+ "Date: " + date + "\n"
-			+ "Last-Modified: " + lmodtime + "\n"
-			+ "Content-Type: " + type + "\n"
-			+ "Content-Length: " filesize + "\n\n"
+			+ "Last-Modified: " + lmodtime + "\n\n"
 			+ body;
 
-		send(clientsocket, sendb.c_str(), sendb.length(), 0);
+		std::cout << "Total Size: " << sendb.length() << std::endl;
+		std::cout << "Body Size: " << str << std::endl;
+
+		send(clientsocket, sendb.c_str(), (sendb.length() + filesize - 4), 0);
 
 		std::cout << "File Sent" << std::endl;
-
-
+		free(body);
+		fclose(myfile);
+		pthread_exit(0);
+		//break;
 		// SEND CODE 200 With FIle Contents
 		// WRITE TO TXT FILE / STDOUT
 		// 304 ERROR CODE
-		
+		// WHEN SENDING JPG, sendb.length() not right size
 	}
+	//close(clientsocket);
+	pthread_exit(0);
 	return 0;
 }
 
@@ -252,7 +283,7 @@ int main(int arc, char** argv) {
         return 3;
     }
 
-	listen(sockfd,10);
+	listen(sockfd,20);
 
 	struct info clientinfo;
 	clientinfo.dir = dir;
