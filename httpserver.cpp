@@ -190,7 +190,7 @@ void* handleclient(void* arg) {
 			sendb = "";
 			strcpy(message,"<h1>501 Error</h1>");
 			
-			sendb = version + " 501 Not Implemented\nDate: " + date + "\nContent-Type: text/html; charset=utf-8\nContent-Length: 18\n\n" + message;  
+			sendb = version + " 501 Not Implemented\r\nDate: " + date + "\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 18\n\n" + message;  
 			send(clientsocket,sendb.c_str(), sendb.length(), 0);
 			break;
 		}
@@ -205,7 +205,7 @@ void* handleclient(void* arg) {
 			sendb = "";
 			strcpy(message,"<h1>404 Error</h1>");
 			
-			sendb = version + " 404 Not Found\nDate: " + date + "\nContent-Type: text/html; charset=utf-8\nContent-Length: 18\n\n" + message;  
+			sendb = version + " 404 Not Found\r\nDate: " + date + "\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 18\n\n" + message;  
 			send(clientsocket,sendb.c_str(), sendb.length(), 0);
 			break;
 		}
@@ -240,11 +240,10 @@ void* handleclient(void* arg) {
 
 		if(e304){
 			strcpy(message, "Not Modified");
-			sendb = version + " 304 " + message + "\n"
-			+ "Connection: " + connection + "\n"
-			+ "Content-Type: " + ext + "\n" 
-			+ "Content-Length: " + str  + "\n"
-			+ "Date: " + date + "\n"
+			sendb = version + " 304 " + message + "\r\n"
+			+ "Connection: " + connection + "\r\n"
+			+ "Content-Type: " + ext + "\r\n" 
+			+ "Date: " + date + "\r\n"
 			+ "Last-Modified: " + lmodtime + "\n\n";
 
 			send(clientsocket, sendb.c_str(), sendb.length(), 0);
@@ -257,11 +256,12 @@ void* handleclient(void* arg) {
 
 		}else{
 
-		sendb = version + c200304 + message + "\n"
-			+ "Connection: " + connection + "\n"
-			+ "Content-Type: " + ext + "\n" 
-			+ "Content-Length: " + str  + "\n"
-			+ "Date: " + date + "\n"
+
+		sendb = version + " 200 " + message + "\r\n"
+			+ "Connection: " + connection + "\r\n"
+			+ "Content-Type: " + ext + "\r\n" 
+			+ "Content-Length: " + str  + "\r\n"
+			+ "Date: " + date + "\r\n"
 			+ "Last-Modified: " + lmodtime + "\n\n";
 
 			if(usefile){

@@ -1,42 +1,79 @@
 GET /testform.html HTTP/1.1
 Host: 127.0.0.1:8080
-User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:63.0) Gecko/20100101 Firefox/63.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 Accept-Language: en-US,en;q=0.5
 Accept-Encoding: gzip, deflate
-DNT: 1
 Connection: keep-alive
 Upgrade-Insecure-Requests: 1
-If-Modified-Since: Mon Nov 26 21:51:42 2018
+Pragma: no-cache
+Cache-Control: no-cache
 
 
 HTTP/1.1OK
-Connection: keep-alive
+Connection: Pragma:
 Content-Type: text/html; charset=utf-8
 Content-Length: 332
-Date: 03-12-2018 22:29:45
-Last-Modified: Mon Nov 26 21:51:42 2018
+Date: 04-12-2018 17:16:22
+Last-Modified: Tue Nov 27 15:50:46 2018
 
 
 
-GET /testform.html HTTP/1.1
+GET /favicon.ico HTTP/1.1
 Host: 127.0.0.1:8080
-User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:63.0) Gecko/20100101 Firefox/63.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+
+.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+Pragma: no-cache
+Cache-Control: no-cache
+
+
+GET /testforms.html HTTP/1.1
+Host: 127.0.0.1:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 Accept-Language: en-US,en;q=0.5
 Accept-Encoding: gzip, deflate
-DNT: 1
 Connection: keep-alive
 Upgrade-Insecure-Requests: 1
-If-Modified-Since: Mon Nov 26 21:51:42 2018
+Pragma: no-cache
+Cache-Control: no-cache
 
 
-HTTP/1.1OK
+GET /testforms.ico HTTP/1.1
+Host: 127.0.0.1:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
 Connection: keep-alive
-Content-Type: text/html; charset=utf-8
-Content-Length: 332
-Date: 03-12-2018 22:33:12
-Last-Modified: Mon Nov 26 21:51:42 2018
+Upgrade-Insecure-Requests: 1
+Pragma: no-cache
+Cache-Control: no-cache
+
+
+
+GET /favicon.ico HTTP/1.1
+Host: 127.0.0.1:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+
+.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+Pragma: no-cache
+Cache-Control: no-cache
 
 
 
