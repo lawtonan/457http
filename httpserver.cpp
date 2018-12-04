@@ -210,7 +210,7 @@ void* handleclient(void* arg) {
 			break;
 		}
 		
-		std::cout << "\nFULLPATH: " << fpath << std::endl;
+		//std::cout << "\nFULLPATH: " << fpath << std::endl;
 
 		time_t mod_time;
 		if(stat(fpath, &result)==0){
