@@ -30,6 +30,31 @@ struct info{
 	char *wfile;
 };
 
+
+std::mutex g_i_mutex;  // protects g_i
+ 
+void filemutex(std::string msg, char* lfile)
+{
+    std::lock_guard<std::mutex> lock(g_i_mutex);
+ 
+	std::ofstream logfile;
+	
+	logfile.open(lfile, std::ios::app);
+	
+	if (logfile.is_open()){
+	logfile << msg << std::endl;
+
+ 	logfile.close();
+	}else{
+	std::cout<<"LOGFILE NOT OPENED"<<std::endl;
+	}
+    // g_i_mutex is automatically released when lock
+    // goes out of scope
+}
+
+
+
+
 void* handleclient(void* arg) {
 	struct info arginfo = *(struct info*)arg;
 	int clientsocket = arginfo.clientsocket;
@@ -38,7 +63,7 @@ void* handleclient(void* arg) {
 	char *wfile = arginfo.wfile;
 	
 	char line[5000];
-	
+	char line2[5000];
 	int rsize;
 	int counter;
 	const char *head;
@@ -61,14 +86,28 @@ void* handleclient(void* arg) {
 	time_t rawtime;
 	struct tm * timeinfo;
   	char date[80];
-	
+	bool e304 = false;
+	char c200304[5];
+
 	struct stat result;
 
+	
+
 	while(1){
+
 		e501 = false;
-		//usleep(500);
+		
 		rsize = recv(clientsocket, line, 5000, 0);
-		std::cout << "------------------\n" << std::endl;
+		//std::cout << "------------------\n" << std::endl;
+
+		if(strcmp(line2,line) == 0){
+			e304 = true;
+		}else{
+			e304 = false;
+		}
+		//std::cout << "------------------" << e304 << "-----------------------" <<std::endl;
+		strcpy(line2,line);
+
 
 		if(rsize == 0){
             		pthread_exit(0);
@@ -78,6 +117,13 @@ void* handleclient(void* arg) {
 		head = line;
 		tail = line;
 		
+		if(usefile){
+			std::string logtext(line);
+			filemutex(logtext,wfile);
+		}else{
+			std::cout << line << std::endl;
+		}
+
 		counter = 0;
 		while(*tail != '\0'){
 			while (*tail != '\0' && *tail != ' ' && *tail != '\n' ){
@@ -88,23 +134,23 @@ void* handleclient(void* arg) {
 			if(counter==0){
 				type = parse;
 				if(strcmp(type.c_str(),"GET")!=0){
-					std::cout << "ERROR 501" << std::endl;
+					//std::cout << "ERROR 501" << std::endl;
 					e501 = true;
 				}
 				counter++;	
-				std::cout<<"TYPE: " << type <<std::endl;
+				//std::cout<<"TYPE: " << type <<std::endl;
 			}else if(counter==1){
 				file = parse;
 				counter++;		
-				std::cout<<"FILE: " << file <<std::endl;	
+				//std::cout<<"FILE: " << file <<std::endl;	
 			}else if(counter==2){
 				version = parse;
 				counter++;		
-				std::cout<<"VERSION: " << version <<std::endl;
+				//std::cout<<"VERSION: " << version <<std::endl;
 			}else if(counter==24){ 
 				connection = parse; // 15 in data comms on 11/27
 				counter++;
-				std::cout<<"CONNECTION: " << connection <<std::endl;
+				//std::cout<<"CONNECTION: " << connection <<std::endl;
 			}else{
 				counter++;
 			}
@@ -113,10 +159,13 @@ void* handleclient(void* arg) {
 			tail++;		
 			head=tail;
 		}
-		connection = "keep-alive";
+		//connection = "keep-alive";
+
+		
+		
 		
 		ext = file.substr(file.find("."),file.size());
-		std::cout<<"FILE EXT: " << ext <<std::endl;
+		//std::cout<<"FILE EXT: " << ext <<std::endl;
 		if(ext == ".html"){
 			ext = "text/html; charset=utf-8";
 		}else if(ext == ".txt"){
@@ -128,14 +177,14 @@ void* handleclient(void* arg) {
 		}else if(ext == "ico"){
 			continue;
 		}else{
-			std::cout << "ERROR 501" << std::endl;
+			//std::cout << "ERROR 501" << std::endl;
 			e501 = true;
 		}
 
 		time (&rawtime);
   		timeinfo = localtime(&rawtime);
 		strftime(date,sizeof(date),"%d-%m-%Y %H:%M:%S",timeinfo);
-		std::cout<<"DATE: " << date <<std::endl;
+		//std::cout<<"DATE: " << date <<std::endl;
 
 		if(e501){
 			sendb = "";
@@ -149,7 +198,7 @@ void* handleclient(void* arg) {
 		char fname[50];
 		strcpy(fname,file.c_str());
 		std::FILE* myfile; 
-		char fpath[20] = "";
+		char fpath[30] = "";
 		strcpy(fpath,dir);
 		
 		if((myfile = std::fopen(strcat(fpath,fname),"r")) == NULL){
@@ -169,8 +218,10 @@ void* handleclient(void* arg) {
 		}
 
 		char* lmodtime = std::ctime(&mod_time);
-		std::cout<<"MODTIME: " << lmodtime << std::endl;
+		//std::cout<<"MODTIME: " << lmodtime << std::endl;
 		
+		
+			
 		sendb = "";
 		strcpy(message, "OK");
 
@@ -183,23 +234,52 @@ void* handleclient(void* arg) {
 		size_t read = fread(body, 1, filesize, myfile);
 
 		char str[256];
-		//usleep(250);
+		usleep(250);
 		snprintf(str, sizeof str, "%zu", filesize);
 
-		sendb = version + " 200 " + message + "\n"
+
+		if(e304){
+			strcpy(message, "Not Modified");
+			sendb = version + " 304 " + message + "\n"
 			+ "Connection: " + connection + "\n"
 			+ "Content-Type: " + ext + "\n" 
 			+ "Content-Length: " + str  + "\n"
 			+ "Date: " + date + "\n"
-			+ "Last-Modified: " + lmodtime + "\n\n"
-			+ body;
+			+ "Last-Modified: " + lmodtime + "\n\n";
 
-		std::cout << "Total Size: " << sendb.length() << std::endl;
-		std::cout << "Body Size: " << str << std::endl;
+			send(clientsocket, sendb.c_str(), sendb.length(), 0);
 
-		send(clientsocket, sendb.c_str(), (sendb.length() + filesize - 4), 0);
+			if(usefile){
+				filemutex(sendb,wfile);
+			}else{
+				std::cout << sendb << std::endl;
+			}
 
-		std::cout << "File Sent" << std::endl;
+		}else{
+
+		sendb = version + c200304 + message + "\n"
+			+ "Connection: " + connection + "\n"
+			+ "Content-Type: " + ext + "\n" 
+			+ "Content-Length: " + str  + "\n"
+			+ "Date: " + date + "\n"
+			+ "Last-Modified: " + lmodtime + "\n\n";
+
+			if(usefile){
+				filemutex(sendb,wfile);
+			}else{
+				std::cout << sendb << std::endl;
+			}
+
+			sendb += body;
+		//std::cout << "Total Size: " << sendb.length() << std::endl;
+		//std::cout << "Body Size: " << str << std::endl;
+
+		send(clientsocket, sendb.c_str(), (sendb.length() + filesize - 2), 0);
+
+		//std::cout << "File Sent" << std::endl;
+		}
+
+		
 		free(body);
 		fclose(myfile);
 		pthread_exit(0);
@@ -229,13 +309,18 @@ int main(int arc, char** argv) {
 			//std::cout << "Got Port" << std::endl;
 		}else if (strcmp(argv[i],"-docroot") == 0){
 			strcpy(dir,argv[i+1]);			
-			//std::cout << "Got docroot" << std::endl;
+			//std::cout << "Got docroot" << dir <<std::endl;
 		}else if (strcmp(argv[i],"-logfile")==0){
 			usefile = true;
 			strcpy(file,argv[i+1]);
 			//std::cout << "Got logfile" << std::endl;
 		}
 	}
+
+	if(strstr(dir,"home")!=NULL||strstr(dir,"..")!=NULL){
+		std::cout << "Inaccessible Directory\n";
+        	exit(1);
+	}	
 
 	if(port < 1 || port > 65535){
         std::cout << "Bad Port Number\n";
@@ -255,14 +340,8 @@ int main(int arc, char** argv) {
 	}
 	//std::cout << "Passed directory check" << std::endl;
 
-	if(usefile){
-		std::FILE* myfile = std::fopen(file,"w");
-		if(myfile == NULL){
-			std::cout << "ERROR opening / creating file"  << std::endl;
-        	return 1;
-		}
-	}
-
+	
+	
 	int sockfd = socket(AF_INET,SOCK_STREAM,0);
 
     if (sockfd<0) {
